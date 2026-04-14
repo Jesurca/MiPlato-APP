@@ -21,8 +21,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
+/**
+ * Pantalla de Cámara.
+ * Permite simular el escaneo de alimentos.
+ */
 @Composable
-fun CameraScreen(onBackToDashboard: () -> Unit) {
+fun CameraScreen(onBack: () -> Unit) {
     val aquamarine = Color(0xFF7FFFD4)
     val lightBlueBg = Color(0xFFF0F7FF)
 
@@ -32,116 +36,50 @@ fun CameraScreen(onBackToDashboard: () -> Unit) {
                 NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.Home, null) }, label = { Text("INICIO") })
                 NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.DateRange, null) }, label = { Text("PLANES") })
                 NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.Person, null) }, label = { Text("PERFIL") })
-                NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("AJUSTES") })
             }
         }
     ) { innerPadding ->
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(lightBlueBg)
-                .padding(innerPadding)
-                .padding(24.dp),
+            modifier = Modifier.fillMaxSize().background(lightBlueBg).padding(innerPadding).padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Header: Logo y Nombre
+            // Cabecera simplificada
+            Text(text = "MiPlato", fontSize = 24.sp, fontWeight = FontWeight.Bold)
+            
+            Spacer(modifier = Modifier.height(32.dp))
+            Text(text = "Apunta tu cámara a la comida", textAlign = TextAlign.Center, fontSize = 18.sp)
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Visor de Cámara
+            Box(
+                modifier = Modifier.fillMaxWidth().weight(1f).background(Color.White, RoundedCornerShape(16.dp)).border(2.dp, Color.Black, RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(painter = painterResource(id = R.drawable.miplatoimggg), contentDescription = null, modifier = Modifier.size(64.dp), tint = Color.LightGray)
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Botones inferiores
             Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.Center,
-                modifier = Modifier.padding(top = 16.dp)
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
+                // Botón Volver
+                TextButton(onClick = onBack) {
+                    Text("Volver al Dashboard", color = Color.Black, fontWeight = FontWeight.Bold)
+                }
+
+                // Obturador circular
                 Surface(
-                    modifier = Modifier.size(48.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    border = BorderStroke(1.dp, Color.Gray),
-                    color = Color.White
-                ) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.miplatoimggg),
-                        contentDescription = null,
-                        modifier = Modifier.padding(8.dp),
-                        tint = Color.Unspecified
-                    )
-                }
-                Spacer(modifier = Modifier.width(12.dp))
-                Text(
-                    text = "MiPlato",
-                    fontSize = 32.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.DarkGray
-                )
-            }
-
-            Text(
-                text = "Apunta tu cámara\na la comida",
-                fontSize = 24.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.padding(vertical = 32.dp),
-                color = Color.DarkGray
-            )
-
-            // Visor de la Cámara
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .background(Color.White, RoundedCornerShape(16.dp))
-                    .border(2.dp, Color.Black, RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        painter = painterResource(id = R.drawable.miplatoimggg),
-                        contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = Color.LightGray
-                    )
-                    Text(text = "CÁMARA", color = Color.Gray, fontWeight = FontWeight.Bold)
-                }
-            }
-
-            // Controles Inferiores
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 32.dp),
-                contentAlignment = Alignment.Center
-            ) {
-                // Botón Volver al Dashboard
-                OutlinedButton(
-                    onClick = { onBackToDashboard() },
-                    modifier = Modifier
-                        .align(Alignment.CenterStart)
-                        .width(100.dp),
-                    shape = RoundedCornerShape(12.dp),
-                    border = BorderStroke(1.dp, Color.Black),
-                    contentPadding = PaddingValues(4.dp)
-                ) {
-                    Text(
-                        text = "Volver al\nDashboard",
-                        fontSize = 12.sp,
-                        color = Color.Black,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 14.sp
-                    )
-                }
-
-                // Botón Obturador Circular
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Text("TOMAR FOTO", fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("ESCANEAR", fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    }
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Surface(
-                        modifier = Modifier.size(80.dp),
-                        shape = CircleShape,
-                        color = Color(0xFF7FFFD4), // Aquamarine
-                        border = BorderStroke(2.dp, Color.Black),
-                        onClick = { /* Acción de tomar foto */ }
-                    ) {}
-                }
+                    modifier = Modifier.size(70.dp),
+                    shape = CircleShape,
+                    color = aquamarine,
+                    border = BorderStroke(2.dp, Color.Black),
+                    onClick = { /* Foto */ }
+                ) { }
             }
         }
     }
@@ -151,6 +89,6 @@ fun CameraScreen(onBackToDashboard: () -> Unit) {
 @Composable
 fun CameraPreview() {
     MyApplicationTheme {
-        CameraScreen(onBackToDashboard = {})
+        CameraScreen(onBack = {})
     }
 }
