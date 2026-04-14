@@ -27,7 +27,7 @@ import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
 @Composable
-fun HomeScreen() {
+fun HomeScreen(onScanClick: () -> Unit) {
     val aquamarine = Color(0xFF7FFFD4)
     val aliceBlue = Color(0xFFF0F8FF)
 
@@ -118,7 +118,6 @@ fun HomeScreen() {
             Spacer(modifier = Modifier.height(32.dp))
 
             // --- ESPACIO PARA LA IMAGEN DE LAS BARRAS ---
-            // El usuario pidió que fuera una imagen que él cambiaría luego.
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -166,7 +165,7 @@ fun HomeScreen() {
 
             // Botón Escanear Comida
             Button(
-                onClick = { /* TODO: Acción Escanear */ },
+                onClick = { onScanClick() },
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(60.dp),
@@ -189,6 +188,6 @@ fun HomeScreen() {
 @Composable
 fun HomePreview() {
     MyApplicationTheme {
-        HomeScreen()
+        HomeScreen(onScanClick = {})
     }
 }
