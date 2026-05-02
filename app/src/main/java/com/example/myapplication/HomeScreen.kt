@@ -25,9 +25,9 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
  * Muestra el progreso de calorías y acceso al escáner.
  */
 @Composable
-fun HomeScreen(onScan: () -> Unit) {
+fun HomeScreen(onScan: () -> Unit, onNavigate: (String) -> Unit) {
     Scaffold(
-        bottomBar = { BarraNavegacion() }
+        bottomBar = { BarraNavegacion(onNavigate) }
     ) { padding ->
         Column(
             modifier = Modifier.fillMaxSize().padding(padding).padding(24.dp)
@@ -101,11 +101,26 @@ fun ResumenCaloriasCard() {
  * Barra inferior con iconos de navegación.
  */
 @Composable
-fun BarraNavegacion() {
+fun BarraNavegacion(onNavigate: (String) -> Unit) {
     NavigationBar(containerColor = Color.White) {
-        NavigationBarItem(selected = true, onClick = {}, icon = { Icon(Icons.Default.Home, null) }, label = { Text("Inicio") })
-        NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.DateRange, null) }, label = { Text("Planes") })
-        NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.Person, null) }, label = { Text("Perfil") })
+        NavigationBarItem(
+            selected = true, 
+            onClick = { onNavigate("home") }, 
+            icon = { Icon(Icons.Default.Home, null) }, 
+            label = { Text("Inicio") }
+        )
+        NavigationBarItem(
+            selected = false, 
+            onClick = { /* onNavigate("planes") */ }, 
+            icon = { Icon(Icons.Default.DateRange, null) }, 
+            label = { Text("Planes") }
+        )
+        NavigationBarItem(
+            selected = false, 
+            onClick = { onNavigate("perfil") }, 
+            icon = { Icon(Icons.Default.Person, null) }, 
+            label = { Text("Perfil") }
+        )
     }
 }
 
@@ -113,6 +128,6 @@ fun BarraNavegacion() {
 @Composable
 fun HomePreview() {
     MyApplicationTheme {
-        HomeScreen(onScan = {})
+        HomeScreen(onScan = {}, onNavigate = {})
     }
 }

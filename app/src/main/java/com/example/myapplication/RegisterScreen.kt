@@ -16,11 +16,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * Pantalla de Registro simplificada.
- * Utiliza componentes reutilizables para minimizar el código.
+ * Pantalla de Registro conectada con Firebase Auth.
  */
 @Composable
-fun RegisterScreen(onRegistered: () -> Unit, onBack: () -> Unit) {
+fun RegisterScreen(onRegistered: (String, String) -> Unit, onBack: () -> Unit) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var pass by remember { mutableStateOf("") }
@@ -32,7 +31,7 @@ fun RegisterScreen(onRegistered: () -> Unit, onBack: () -> Unit) {
         modifier = Modifier.fillMaxSize().padding(24.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        LogoPrincipal(size = 80) // Logo más pequeño para registro
+        LogoPrincipal(size = 80)
         
         Spacer(modifier = Modifier.height(24.dp))
         Text("Crear Cuenta", fontSize = 28.sp, fontWeight = FontWeight.Bold)
@@ -40,14 +39,13 @@ fun RegisterScreen(onRegistered: () -> Unit, onBack: () -> Unit) {
         Spacer(modifier = Modifier.height(24.dp))
         CampoTexto("Nombre completo", name, { name = it })
         Spacer(modifier = Modifier.height(8.dp))
-        CampoTexto("Correo electrónico", email, { email = it })
+        CampoTexto("Correo electrónico (Gmail)", email, { email = it })
         Spacer(modifier = Modifier.height(8.dp))
         CampoTexto("Contraseña", pass, { pass = it }, isPassword = true)
 
         Spacer(modifier = Modifier.height(24.dp))
         Text("Tu objetivo:", modifier = Modifier.fillMaxWidth(), fontWeight = FontWeight.SemiBold)
         
-        // Selector de objetivos simplificado
         Row(
             modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
@@ -66,7 +64,8 @@ fun RegisterScreen(onRegistered: () -> Unit, onBack: () -> Unit) {
         }
 
         Spacer(modifier = Modifier.height(32.dp))
-        BotonPrincipal("Registrarse", onRegistered)
+        // Enviamos los datos a la lógica de Firebase en MainActivity
+        BotonPrincipal("Registrarse") { onRegistered(email, pass) }
 
         Spacer(modifier = Modifier.weight(1f))
         Text("¿Ya tienes cuenta? Inicia sesión", 
