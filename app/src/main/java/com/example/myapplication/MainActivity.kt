@@ -1,123 +1,53 @@
 package com.example.myapplication
 
-import android.Manifest
-import android.content.pm.PackageManager
-import android.net.Uri
 import android.os.Bundle
-import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.BorderStroke
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Email
+import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.style.TextDecoration
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.content.ContextCompat
 import com.example.myapplication.ui.theme.MyApplicationTheme
-import com.google.firebase.auth.FirebaseAuth
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        val auth = FirebaseAuth.getInstance()
-        auth.signOut()
-        
         enableEdgeToEdge()
         setContent {
             MyApplicationTheme {
-                var screen by remember { mutableStateOf("login") }
-                var capturedUri by remember { mutableStateOf<Uri?>(null) }
-                val context = LocalContext.current
+                // Estado simple para controlar la navegación entre pantallas
+                var currentScreen by remember { mutableStateOf("login") }
 
-                val permissionLauncher = rememberLauncherForActivityResult(
-                    ActivityResultContracts.RequestPermission()
-                ) { isGranted ->
-                    if (isGranted) {
-                        screen = "camera"
-                    } else {
-                        Toast.makeText(context, "Permiso de cámara denegado", Toast.LENGTH_SHORT).show()
-                    }
-                }
-
-                Surface(modifier = Modifier.fillMaxSize(), color = Color.White) {
-                    when (screen) {
-                        "login" -> LoginScreen(
-                            onLogin = { email, pass ->
-                                if (email.isNotEmpty() && pass.isNotEmpty()) {
-                                    auth.signInWithEmailAndPassword(email, pass)
-                                        .addOnCompleteListener { task ->
-                                            if (task.isSuccessful) {
-                                                screen = "home"
-                                            } else {
-                                                Toast.makeText(context, "Error: ${task.exception?.message}", Toast.LENGTH_LONG).show()
-                                            }
-                                        }
-                                }
-                            },
-                            onGoRegister = { screen = "register" }
-                        )
-                        "register" -> RegisterScreen(
-                            onRegistered = { email, pass ->
-                                if (email.isNotEmpty() && pass.isNotEmpty()) {
-                                    auth.createUserWithEmailAndPassword(email, pass)
-                                        .addOnCompleteListener { task ->
-                                            if (task.isSuccessful) {
-                                                Toast.makeText(context, "¡Cuenta creada!", Toast.LENGTH_SHORT).show()
-                                                screen = "login"
-                                            }
-                                        }
-                                }
-                            },
-                            onBack = { screen = "login" }
-                        )
-                        "home" -> HomeScreen(
-                            onScan = {
-                                when (PackageManager.PERMISSION_GRANTED) {
-                                    ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) -> {
-                                        screen = "camera"
-                                    }
-                                    else -> {
-                                        permissionLauncher.launch(Manifest.permission.CAMERA)
-                                    }
-                                }
-                            },
-                            onNavigate = { target -> screen = target }
-                        )
-                        "camera" -> CameraScreen(
-                            onBack = { screen = "home" },
-                            onCaptured = { uri -> 
-                                capturedUri = uri
-                                screen = "captured_food" 
-                            }
-                        )
-                        "captured_food" -> AlimentoCapturadoScreen(
-                            capturedUri = capturedUri,
-                            onBack = { screen = "camera" },
-                            onAgregar = { 
-                                Toast.makeText(context, "Alimento agregado con éxito", Toast.LENGTH_SHORT).show()
-                                screen = "home" 
-                            }
-                        )
-                        "perfil" -> PerfilScreen(
-                            onBack = { screen = "home" },
-                            onSave = { screen = "home" },
-                            onNavigate = { target -> screen = target }
-                        )
-                        "planes" -> PlanesScreen(
-                            onBack = { screen = "home" },
-                            onSave = { screen = "home" },
-                            onNavigate = { target -> screen = target }
-                        )
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = Color.White
+                ) {
+                    when (currentScreen) {
+                        "login" -> LoginScreen(onLoginClick = { currentScreen = "home" })
+                        "home" -> HomeScreen(onScan = { currentScreen = "camera" })
+                        "camera" -> CameraScreen(onBack = { currentScreen = "home" })
+                        else -> LoginScreen(onLoginClick = { currentScreen = "home" })
                     }
                 }
             }
@@ -126,27 +56,170 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LoginScreen(onLogin: (String, String) -> Unit, onGoRegister: () -> Unit) {
+fun LoginScreen(onLoginClick: () -> Unit) {
+    val aquamarine = Color(0xFF7FFFD4)
+    val aliceBlue = Color(0xFFF0F8FF)
+
     var email by remember { mutableStateOf("") }
-    var pass by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
 
     Column(
-        modifier = Modifier.fillMaxSize().padding(32.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(horizontal = 32.dp, vertical = 48.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
+        verticalArrangement = Arrangement.Top
     ) {
-        LogoPrincipal()
-        Spacer(modifier = Modifier.height(32.dp))
-        Text("MiPlato Login", fontSize = 28.sp, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(32.dp))
-        CampoTexto("Gmail", email, { email = it })
-        Spacer(modifier = Modifier.height(16.dp))
-        CampoTexto("Contraseña", pass, { pass = it }, isPassword = true)
-        Spacer(modifier = Modifier.height(48.dp))
-        BotonPrincipal("Iniciar Sesión") { onLogin(email, pass) }
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // Contenedor del Logo con tu imagen
+        Box(
+            modifier = Modifier
+                .size(150.dp)
+                .background(Color.White, shape = RoundedCornerShape(16.dp))
+                .border(1.dp, Color.LightGray, shape = RoundedCornerShape(16.dp)),
+            contentAlignment = Alignment.Center
+        ) {
+            Image(
+                painter = painterResource(id = R.drawable.miplatoimggg),
+                contentDescription = "MacroCam Logo",
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(12.dp),
+                contentScale = ContentScale.Fit
+            )
+        }
+
         Spacer(modifier = Modifier.height(24.dp))
-        Text("¿Eres nuevo? Regístrate aquí",
-            modifier = Modifier.clickable { onGoRegister() },
-            color = Color.Gray, fontWeight = FontWeight.Bold)
+
+        Text(
+            text = "Iniciar sesión en MacroCam",
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = Color.Black
+        )
+
+        Spacer(modifier = Modifier.height(32.dp))
+
+        // Campo de Correo Electrónico
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(text = "Correo electrónico", fontSize = 14.sp, color = Color.DarkGray)
+            Spacer(modifier = Modifier.height(4.dp))
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(aliceBlue, RoundedCornerShape(12.dp)),
+                placeholder = { Text("ejemplo@correo.com", color = Color.Gray) },
+                leadingIcon = { Icon(Icons.Default.Email, contentDescription = null, tint = Color.Gray) },
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = Color.LightGray,
+                    focusedBorderColor = Color.Gray
+                ),
+                singleLine = true
+            )
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Campo de Contraseña
+        Column(modifier = Modifier.fillMaxWidth()) {
+            Text(text = "Contraseña", fontSize = 14.sp, color = Color.DarkGray)
+            Spacer(modifier = Modifier.height(4.dp))
+            OutlinedTextField(
+                value = password,
+                onValueChange = { password = it },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(aliceBlue, RoundedCornerShape(12.dp)),
+                placeholder = { Text("••••••••", color = Color.Gray) },
+                leadingIcon = { Icon(Icons.Default.Lock, contentDescription = null, tint = Color.Gray) },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+                shape = RoundedCornerShape(12.dp),
+                colors = OutlinedTextFieldDefaults.colors(
+                    unfocusedBorderColor = Color.LightGray,
+                    focusedBorderColor = Color.Gray
+                ),
+                singleLine = true
+            )
+        }
+
+        Text(
+            text = "Olvidé mi contraseña",
+            fontSize = 12.sp,
+            textDecoration = TextDecoration.Underline,
+            modifier = Modifier
+                .align(Alignment.End)
+                .padding(top = 8.dp)
+        )
+
+        Spacer(modifier = Modifier.height(40.dp))
+
+        // Botón Iniciar Sesión (AHORA LLAMA AL CALLBACK)
+        Button(
+            onClick = { onLoginClick() },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            colors = ButtonDefaults.buttonColors(containerColor = aquamarine),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, Color.Black)
+        ) {
+            Text(
+                text = "Iniciar sesión",
+                color = Color.Black,
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(text = "O también...", fontSize = 14.sp, color = Color.Gray)
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        // Botón Registrarse
+        OutlinedButton(
+            onClick = { /* Acción de registro */ },
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(56.dp),
+            shape = RoundedCornerShape(12.dp),
+            border = BorderStroke(1.dp, Color.Black),
+            colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.Black)
+        ) {
+            Text(
+                text = "Registrarse",
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp
+            )
+        }
+
+        Spacer(modifier = Modifier.weight(1f))
+
+        Row(
+            modifier = Modifier.padding(bottom = 16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(text = "¿No tienes cuenta aún? ", fontSize = 14.sp)
+            Text(
+                text = "Registrarse",
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Bold,
+                textDecoration = TextDecoration.Underline
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun LoginPreview() {
+    MyApplicationTheme {
+        LoginScreen(onLoginClick = {})
     }
 }
