@@ -45,8 +45,18 @@ class MainActivity : ComponentActivity() {
                 ) {
                     when (currentScreen) {
                         "login" -> LoginScreen(onLoginClick = { currentScreen = "home" })
-                        "home" -> HomeScreen(onScan = { currentScreen = "camera" })
-                        "camera" -> CameraScreen(onBack = { currentScreen = "home" })
+                        "home" -> HomeScreen(
+                            onScan = { currentScreen = "camera" },
+                            onNavigate = { screen -> currentScreen = screen }
+                        )
+                        "camera" -> CameraScreen(
+                            onBack = { currentScreen = "home" },
+                            onCaptured = { uri -> 
+                                // Por ahora volvemos a home tras capturar
+                                currentScreen = "home" 
+                            }
+                        )
+                        "history" -> HistoryScreen(onBack = { currentScreen = "home" })
                         else -> LoginScreen(onLoginClick = { currentScreen = "home" })
                     }
                 }
@@ -82,7 +92,7 @@ fun LoginScreen(onLoginClick: () -> Unit) {
         ) {
             Image(
                 painter = painterResource(id = R.drawable.miplatoimggg),
-                contentDescription = "MacroCam Logo",
+                contentDescription = "MiPlato Logo",
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(12.dp),
@@ -93,7 +103,7 @@ fun LoginScreen(onLoginClick: () -> Unit) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "Iniciar sesión en MacroCam",
+            text = "Iniciar sesión en MiPlato",
             fontSize = 24.sp,
             fontWeight = FontWeight.Bold,
             color = Color.Black
