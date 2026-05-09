@@ -5,155 +5,223 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
-/**
- * AddFoodScreen: Pantalla para buscar y añadir alimentos manualmente.
- * Permite seleccionar cantidades y unidades de medida.
- */
 @Composable
 fun AddFoodScreen(onBack: () -> Unit, onFoodAdded: () -> Unit) {
     var searchText by remember { mutableStateOf("") }
-    var quantity by remember { mutableIntStateOf(1) }
+    var quantity by remember { mutableStateOf("100") }
     var selectedUnit by remember { mutableStateOf("Gramos (g)") }
     var expanded by remember { mutableStateOf(false) }
 
     val units = listOf("Gramos (g)", "Porción", "Taza")
-    val searchResults = listOf("Pollo a la plancha", "Arroz integral", "Ensalada mixta", "Manzana")
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color(0xFFF0F7FF)) 
-            .padding(24.dp)
-    ) {
-        // Cabecera
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(top = 8.dp),
-            verticalAlignment = Alignment.CenterVertically
+    
+    Scaffold(
+        containerColor = FondoOscuro,
+        bottomBar = { BarraNavegacionComun("history", {}) } // Dummy navigation for visual consistency
+    ) { padding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp)
         ) {
-            Icon(
-                imageVector = Icons.Default.ArrowBack,
-                contentDescription = "Volver",
-                modifier = Modifier.size(24.dp).clickable { onBack() }
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Text(text = "MiPlato", fontSize = 22.sp, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.weight(1f))
-            Spacer(modifier = Modifier.width(24.dp))
-        }
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Buscador
-        OutlinedTextField(
-            value = searchText,
-            onValueChange = { searchText = it },
-            placeholder = { Text("Buscar alimentos...") },
-            modifier = Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(12.dp)),
-            leadingIcon = { Icon(Icons.Default.Search, null) },
-            shape = RoundedCornerShape(12.dp)
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        Text(text = "Resultados", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        // Lista de resultados
-        Column(modifier = Modifier.fillMaxWidth().weight(1f)) {
-            searchResults.forEach { food ->
-                ItemComidaBusqueda(food)
-            }
-        }
-
-        // Detalles de cantidad
-        Text(text = "Cantidad", fontSize = 18.sp, fontWeight = FontWeight.Bold)
-        
-        Spacer(modifier = Modifier.height(16.dp))
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            // Selector + / -
+            // Header
             Row(
-                modifier = Modifier
-                    .border(1.dp, Color.Gray, RoundedCornerShape(8.dp))
-                    .background(Color.White, RoundedCornerShape(8.dp)),
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                IconButton(onClick = { if (quantity > 1) quantity-- }) {
-                    Icon(Icons.Default.KeyboardArrowDown, contentDescription = null)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Box(
+                        modifier = Modifier
+                            .size(40.dp)
+                            .clip(CircleShape)
+                            .background(Color.Gray) // Placeholder icon
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Text("MiPlato", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                 }
-                Text(text = quantity.toString(), fontWeight = FontWeight.Bold)
-                IconButton(onClick = { quantity++ }) {
-                    Icon(Icons.Default.KeyboardArrowUp, contentDescription = null)
+                Icon(Icons.Default.NotificationsNone, contentDescription = null, tint = VerdeApp)
+            }
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Search Bar
+            OutlinedTextField(
+                value = searchText,
+                onValueChange = { searchText = it },
+                placeholder = { Text("Buscar alimentos...", color = TextoGris) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(GrisCard, RoundedCornerShape(12.dp)),
+                shape = RoundedCornerShape(12.dp),
+                leadingIcon = { Icon(Icons.Default.Search, null, tint = TextoGris) },
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = VerdeApp,
+                    unfocusedBorderColor = GrisBorde,
+                    focusedTextColor = Color.White,
+                    unfocusedTextColor = Color.White
+                )
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Text("RESULTADOS DE BÚSQUEDA", color = TextoGris, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Search Results
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = GrisCard),
+                border = BorderStroke(1.dp, GrisBorde)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    SearchResultItem("Pollo a la plancha", "165 kcal • 100g", Icons.Default.Restaurant)
+                    HorizontalDivider(color = GrisBorde, modifier = Modifier.padding(vertical = 8.dp))
+                    SearchResultItem("Arroz integral", "111 kcal • 100g", Icons.Default.Grain)
+                    HorizontalDivider(color = GrisBorde, modifier = Modifier.padding(vertical = 8.dp))
+                    SearchResultItem("Ensalada mixta", "45 kcal • 150g", Icons.Default.Eco)
+                    HorizontalDivider(color = GrisBorde, modifier = Modifier.padding(vertical = 8.dp))
+                    SearchResultItem("Manzana", "52 kcal • 1 ud", Icons.Default.Favorite)
                 }
             }
 
-            // Dropdown de unidades
-            Box(modifier = Modifier.weight(1f)) {
-                OutlinedCard(
-                    onClick = { expanded = true },
-                    shape = RoundedCornerShape(8.dp),
-                    colors = CardDefaults.outlinedCardColors(containerColor = Color.White)
-                ) {
-                    Row(
-                        modifier = Modifier.padding(12.dp).fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween
-                    ) {
-                        Text(text = selectedUnit, fontSize = 14.sp)
-                        Icon(Icons.Default.ArrowDropDown, null)
+            Spacer(modifier = Modifier.height(32.dp))
+
+            // Quantity Details Card
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(24.dp),
+                colors = CardDefaults.cardColors(containerColor = GrisCard),
+                border = BorderStroke(1.dp, GrisBorde)
+            ) {
+                Column(modifier = Modifier.padding(24.dp)) {
+                    Text("Detalles de cantidad", color = Color.White, fontSize = 24.sp, fontWeight = FontWeight.Bold)
+                    Text("Ajusta la porción para calcular macros precisos.", color = TextoGris, fontSize = 14.sp)
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Text("Cantidad", color = TextoGris, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedTextField(
+                        value = quantity,
+                        onValueChange = { quantity = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(12.dp),
+                        leadingIcon = { Icon(Icons.Default.Remove, null, tint = VerdeApp, modifier = Modifier.clickable { /* Decrease */ }) },
+                        colors = OutlinedTextFieldDefaults.colors(
+                            focusedBorderColor = VerdeApp,
+                            unfocusedBorderColor = GrisBorde,
+                            focusedContainerColor = FondoOscuro,
+                            unfocusedContainerColor = FondoOscuro,
+                            focusedTextColor = Color.White,
+                            unfocusedTextColor = Color.White
+                        ),
+                        textStyle = androidx.compose.ui.text.TextStyle(textAlign = androidx.compose.ui.text.style.TextAlign.Center, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                    )
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text("Unidad", color = TextoGris, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Box(modifier = Modifier.fillMaxWidth()) {
+                        Surface(
+                            modifier = Modifier.fillMaxWidth().height(56.dp).clickable { expanded = true },
+                            shape = RoundedCornerShape(12.dp),
+                            color = FondoOscuro,
+                            border = BorderStroke(1.dp, GrisBorde)
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(horizontal = 16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(selectedUnit, color = Color.White)
+                                Icon(Icons.Default.KeyboardArrowDown, null, tint = VerdeApp)
+                            }
+                        }
+                        DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.background(GrisCard)) {
+                            units.forEach { unit ->
+                                DropdownMenuItem(
+                                    text = { Text(unit, color = Color.White) },
+                                    onClick = { selectedUnit = unit; expanded = false }
+                                )
+                            }
+                        }
                     }
-                }
-                DropdownMenu(expanded = expanded, onDismissRequest = { expanded = false }) {
-                    units.forEach { unit ->
-                        DropdownMenuItem(
-                            text = { Text(unit) },
-                            onClick = { selectedUnit = unit; expanded = false }
-                        )
-                    }
+                    
+                    Spacer(modifier = Modifier.height(32.dp))
+                    
+                    BotonPrincipal("Agregar alimento", onClick = onFoodAdded, icon = Icons.Default.CheckCircle)
+                    
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    BotonSecundario("Volver a Buscar", onClick = onBack)
                 }
             }
+            
+            Spacer(modifier = Modifier.height(24.dp))
         }
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        BotonPrincipal(text = "Agregar alimento", onClick = onFoodAdded)
     }
 }
 
 @Composable
-fun ItemComidaBusqueda(name: String) {
-    Column {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.List, null, modifier = Modifier.size(24.dp), tint = Color.Gray)
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(text = name, fontSize = 16.sp)
+fun SearchResultItem(name: String, detail: String, icon: ImageVector) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Box(
+                modifier = Modifier
+                    .size(40.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .background(GrisBorde),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(icon, contentDescription = null, tint = VerdeApp, modifier = Modifier.size(20.dp))
             }
-            Icon(Icons.Default.Add, null, tint = Color.Gray)
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(name, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+                Text(detail, color = TextoGris, fontSize = 12.sp)
+            }
         }
-        HorizontalDivider(color = Color.LightGray.copy(alpha = 0.5f))
+        Icon(Icons.Default.Add, contentDescription = null, tint = VerdeApp, modifier = Modifier.size(24.dp).border(1.dp, VerdeApp, CircleShape))
+    }
+}
+
+@Composable
+fun BotonSecundario(text: String, onClick: () -> Unit) {
+    OutlinedButton(
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth().height(56.dp),
+        shape = RoundedCornerShape(28.dp),
+        border = BorderStroke(1.dp, GrisBorde),
+        colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White)
+    ) {
+        Text(text, fontWeight = FontWeight.Bold, fontSize = 16.sp)
     }
 }
 

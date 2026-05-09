@@ -12,11 +12,14 @@ import androidx.camera.view.PreviewView
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -37,6 +40,7 @@ import java.util.*
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CameraScreen(onBack: () -> Unit, onCaptured: (Uri) -> Unit) {
     val context = LocalContext.current
@@ -46,9 +50,6 @@ fun CameraScreen(onBack: () -> Unit, onCaptured: (Uri) -> Unit) {
     val previewView = remember { PreviewView(context) }
     val imageCapture = remember { ImageCapture.Builder().build() }
     val cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA
-
-    val aquamarine = Color(0xFF7FFFD4)
-    val lightBlueBg = Color(0xFFF0F7FF)
 
     LaunchedEffect(Unit) {
         val cameraProviderFuture = ProcessCameraProvider.getInstance(context)
@@ -79,68 +80,132 @@ fun CameraScreen(onBack: () -> Unit, onCaptured: (Uri) -> Unit) {
     }
 
     Scaffold(
-        bottomBar = {
-            NavigationBar(containerColor = Color.White) {
-                NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.Home, null) }, label = { Text("INICIO") })
-                NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.DateRange, null) }, label = { Text("PLANES") })
-                NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.Person, null) }, label = { Text("PERFIL") })
-            }
-        }
+        containerColor = Color.Black,
+        topBar = {
+            CenterAlignedTopAppBar(
+                title = {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(VerdeApp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Restaurant, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.Black)
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("MiPlato", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
+                    }
+                },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás", tint = VerdeApp)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {}) {
+                        Icon(Icons.Outlined.Info, contentDescription = "Info", tint = Color.White)
+                    }
+                },
+                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(containerColor = Color.Transparent)
+            )
+        },
+        bottomBar = { BarraNavegacionComun("history", {}) }
     ) { innerPadding ->
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(lightBlueBg)
                 .padding(innerPadding)
-                .padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "MiPlato", fontSize = 24.sp, fontWeight = FontWeight.Bold)
-            
-            Spacer(modifier = Modifier.height(32.dp))
-            Text(text = "Apunta tu cámara a la comida", textAlign = TextAlign.Center, fontSize = 18.sp)
+            // Camera Viewport
+            AndroidView(
+                factory = { previewView },
+                modifier = Modifier.fillMaxSize()
+            )
 
-            Spacer(modifier = Modifier.height(32.dp))
-
-            // Visor de Cámara Real
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .clip(RoundedCornerShape(16.dp))
-                    .border(2.dp, Color.Black, RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
+            // Scanning UI Overlays
+            Column(
+                modifier = Modifier.fillMaxSize(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                AndroidView(
-                    factory = { previewView },
-                    modifier = Modifier.fillMaxSize()
+                Spacer(modifier = Modifier.height(24.dp))
+                
+                // Processing dots
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    repeat(3) {
+                        Box(modifier = Modifier.size(6.dp).background(VerdeApp, CircleShape))
+                    }
+                }
+                Text(
+                    "ANALIZANDO...", 
+                    color = VerdeApp, 
+                    fontSize = 12.sp, 
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 8.dp)
                 )
-            }
 
-            Spacer(modifier = Modifier.height(32.dp))
+                Spacer(modifier = Modifier.weight(1f))
 
-            // Botones inferiores
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = onBack) {
-                    Text("Volver", color = Color.Black, fontWeight = FontWeight.Bold)
+                // Detection Square Frame
+                Box(
+                    modifier = Modifier
+                        .size(280.dp)
+                        .border(2.dp, VerdeApp.copy(alpha = 0.5f), RoundedCornerShape(24.dp))
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Tooltip
+                Surface(
+                    color = Color.Black.copy(alpha = 0.7f),
+                    shape = RoundedCornerShape(24.dp),
+                    modifier = Modifier.padding(bottom = 24.dp)
+                ) {
+                    Text(
+                        "Apunta tu cámara a la comida",
+                        color = Color.White,
+                        modifier = Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
+                        fontSize = 14.sp
+                    )
                 }
 
-                // Obturador Real
-                Surface(
-                    modifier = Modifier.size(70.dp),
-                    shape = CircleShape,
-                    color = aquamarine,
-                    border = BorderStroke(2.dp, Color.Black),
-                    onClick = {
-                        takePhoto(context, imageCapture, cameraExecutor, onCaptured)
+                // Camera Controls
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(bottom = 32.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        onClick = { /* Open Gallery */ },
+                        modifier = Modifier.size(56.dp).background(Color.White.copy(alpha = 0.2f), CircleShape)
+                    ) {
+                        Icon(Icons.Default.Image, contentDescription = "Galería", tint = Color.White)
                     }
-                ) { }
-                
-                Spacer(modifier = Modifier.width(40.dp)) // To balance the layout
+
+                    // Shutter Button
+                    Box(
+                        modifier = Modifier
+                            .size(80.dp)
+                            .border(4.dp, VerdeApp, CircleShape)
+                            .padding(6.dp)
+                            .clip(CircleShape)
+                            .background(VerdeApp)
+                            .clickable { takePhoto(context, imageCapture, cameraExecutor, onCaptured) },
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Icon(Icons.Default.PhotoCamera, contentDescription = "Capturar", tint = Color.Black, modifier = Modifier.size(32.dp))
+                    }
+
+                    IconButton(
+                        onClick = { /* Toggle Flash */ },
+                        modifier = Modifier.size(56.dp).background(Color.White.copy(alpha = 0.2f), CircleShape)
+                    ) {
+                        Icon(Icons.Default.FlashOn, contentDescription = "Flash", tint = Color.White)
+                    }
+                }
             }
         }
     }

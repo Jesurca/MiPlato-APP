@@ -32,3 +32,19 @@ Este documento describe la estructura y funcionalidad de las pantallas de la apl
     - Visor de cámara estilizado.
     - Botón de obturador ergonómico.
     - Acceso rápido para volver al dashboard principal.
+
+
+## 6. HistoryScreen (Historial de Consumo)
+- **Función**: Permite visualizar el registro histórico de nutrición del usuario de forma diaria.
+- **Elementos Clave**:
+  - **Gráfico de Tendencia**: Imagen superior que muestra la evolución de calorías.
+  - **Lista Expandible**: Implementada con `LazyColumn` para optimizar el rendimiento. Al hacer clic en un día, se expande para mostrar el desglose.
+  - **Visualización de Macros**: Incluye un "Pie Chart" simplificado dibujado con `Canvas` para representar la distribución de proteínas, carbohidratos y grasas.
+  - **Navegación**: Integra una `NavigationBar` personalizada que resalta la sección de Historial.
+
+## Implementación de Firebase
+Se ha configurado la base técnica para los servicios de Google en la aplicación:
+- **Firebase BOM**: Gestión centralizada de versiones para evitar conflictos entre dependencias.
+- **Firebase Authentication**: Preparado para gestionar el registro e inicio de sesión de usuarios de forma segura.
+- **Cloud Firestore**: Configurado para el almacenamiento de perfiles de usuario y registros de comidas en tiempo real.
+- **Google Services**: Integración del plugin de Gradle y el archivo `google-services.json` para la comunicación con el proyecto en la consola de Firebase.
