@@ -1,7 +1,7 @@
 package com.example.myapplication
 
 import android.net.Uri
-import androidx.compose.foundation.Image
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
@@ -11,8 +11,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.List
-import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.filled.Bolt
+import androidx.compose.material.icons.filled.NotificationsNone
+import androidx.compose.material.icons.filled.Restaurant
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -33,63 +34,60 @@ import com.example.myapplication.ui.theme.MyApplicationTheme
 @Composable
 fun AlimentoCapturadoScreen(capturedUri: Uri?, onBack: () -> Unit, onAgregar: () -> Unit) {
     Scaffold(
+        containerColor = FondoOscuro,
         topBar = {
             TopAppBar(
                 title = {
-                    Row(
-                        modifier = Modifier.fillMaxWidth().padding(end = 48.dp),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.miplatoimggg),
-                            contentDescription = null,
-                            modifier = Modifier.size(30.dp)
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("MiPlato", color = Color.Gray, fontSize = 18.sp)
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Box(
+                            modifier = Modifier
+                                .size(32.dp)
+                                .clip(RoundedCornerShape(8.dp))
+                                .background(VerdeApp),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(Icons.Default.Restaurant, contentDescription = null, modifier = Modifier.size(18.dp), tint = Color.Black)
+                        }
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Text("MiPlato", color = Color.White, fontSize = 20.sp, fontWeight = FontWeight.Bold)
                     }
                 },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Atrás", tint = Color.White)
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {}) {
+                        Icon(Icons.Default.NotificationsNone, contentDescription = null, tint = VerdeApp)
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = Color.Transparent)
             )
         },
-        bottomBar = {
-            NavigationBar(containerColor = Color.White) {
-                NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.Home, null) }, label = { Text("INICIO") })
-                NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.DateRange, null) }, label = { Text("PLANES") })
-                NavigationBarItem(selected = true, onClick = {}, icon = { Icon(Icons.AutoMirrored.Filled.List, null) }, label = { Text("HISTORIAL") })
-                NavigationBarItem(selected = false, onClick = {}, icon = { Icon(Icons.Default.Settings, null) }, label = { Text("AJUSTES") })
-            }
-        }
+        bottomBar = { BarraNavegacionComun("history", {}) } // Dummy navigation for visual consistency
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 24.dp)
-                .verticalScroll(rememberScrollState()),
-            horizontalAlignment = Alignment.CenterHorizontally
+                .verticalScroll(rememberScrollState())
+                .padding(24.dp)
         ) {
             Text(
                 text = "Pollo con arroz",
+                color = Color.White,
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(top = 8.dp, bottom = 16.dp)
+                modifier = Modifier.padding(bottom = 24.dp)
             )
 
-            // Imagen del alimento capturado
+            // Main Image with Overlay
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(200.dp)
-                    .border(1.dp, Color.Black, RoundedCornerShape(16.dp))
-                    .clip(RoundedCornerShape(16.dp)),
-                contentAlignment = Alignment.Center
+                    .height(280.dp)
+                    .clip(RoundedCornerShape(16.dp))
             ) {
                 if (capturedUri != null) {
                     AsyncImage(
@@ -99,107 +97,122 @@ fun AlimentoCapturadoScreen(capturedUri: Uri?, onBack: () -> Unit, onAgregar: ()
                         contentScale = ContentScale.Crop
                     )
                 } else {
-                    Image(
-                        painter = painterResource(id = R.drawable.miplatoimggg),
-                        contentDescription = "Alimento por defecto",
-                        modifier = Modifier.fillMaxSize(),
-                        contentScale = ContentScale.Crop
-                    )
+                    // Placeholder box matching the screenshot's dark aesthetic
+                    Box(modifier = Modifier.fillMaxSize().background(GrisCard))
                 }
                 
-                // Overlay de cámara
-                Surface(
-                    modifier = Modifier.size(90.dp),
-                    color = Color.White.copy(alpha = 0.9f),
-                    shape = CircleShape,
-                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray)
+                // Dark overlay at the bottom of the image
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(16.dp)
+                        .fillMaxWidth(0.6f)
+                        .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(12.dp))
+                        .border(1.dp, GrisBorde, RoundedCornerShape(12.dp))
+                        .padding(16.dp)
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Icon(Icons.Default.PhotoCamera, contentDescription = null, modifier = Modifier.size(32.dp))
-                        Text("CÁMARA", fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                    Column {
+                        Text("CONTENIDO\nESTIMADO", color = TextoGris, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        Text("500", color = VerdeApp, fontSize = 32.sp, fontWeight = FontWeight.Black)
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("KCAL", color = VerdeApp, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.weight(1f))
+                            Icon(Icons.Default.Bolt, contentDescription = null, tint = VerdeApp, modifier = Modifier.size(14.dp))
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text("Alta\nDensidad", color = VerdeApp, fontSize = 10.sp, fontWeight = FontWeight.Bold, lineHeight = 10.sp)
+                        }
                     }
                 }
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
 
-            Text(
-                text = "Calorías estimadas: 500 KCAL",
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp), thickness = 0.5.dp, color = Color.LightGray)
-
-            Text(
-                text = "Macronutrientes",
-                modifier = Modifier.fillMaxWidth(),
-                fontSize = 18.sp,
-                fontWeight = FontWeight.Bold
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
+            // Macro Circular Indicators
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                MacroCard(label = "Proteínas", value = "35g", percentage = 0.35f, percentageText = "35%")
-                MacroCard(label = "Carbohidratos", value = "55g", percentage = 0.45f, percentageText = "45%")
-                MacroCard(label = "Grasas", value = "15g", percentage = 0.20f, percentageText = "20%")
+                MacroCircleItem("PROTEÍNAS", "35g", 0.7f, VerdeApp)
+                MacroCircleItem("CARBOHIDRATOS", "55g", 0.6f, VerdeApp)
+                MacroCircleItem("GRASAS", "15g", 0.4f, VerdeApp)
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(32.dp))
 
-            Column(modifier = Modifier.fillMaxWidth()) {
-                Text(text = "Detalles adicionales:", fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Spacer(modifier = Modifier.height(8.dp))
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text(text = "Fibra: 15g", fontSize = 14.sp)
-                    Text(text = "Azúcares: 35g", fontSize = 14.sp)
-                    Text(text = "Sodio: 20g", fontSize = 14.sp)
+            // Additional Details
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(16.dp),
+                colors = CardDefaults.cardColors(containerColor = GrisCard),
+                border = BorderStroke(1.dp, GrisBorde)
+            ) {
+                Column(modifier = Modifier.padding(20.dp)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(Icons.Default.Restaurant, contentDescription = null, tint = VerdeApp, modifier = Modifier.size(16.dp))
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("DETALLES ADICIONALES", color = VerdeApp, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    }
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        DetailItem("FIBRA", "15g", Modifier.weight(1f))
+                        DetailItem("AZÚCARES", "35g", Modifier.weight(1f))
+                    }
+                    Spacer(modifier = Modifier.height(16.dp))
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        DetailItem("SODIO", "20g", Modifier.weight(1f))
+                        DetailItem("POTASIO", "450mg", Modifier.weight(1f))
+                    }
                 }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            BotonPrincipal(text = "Agregar al día", onClick = onAgregar)
+            BotonPrincipal(text = "Agregar al día", onClick = onAgregar, icon = Icons.Default.Restaurant)
             
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(24.dp))
         }
     }
 }
 
 @Composable
-fun MacroCard(label: String, value: String, percentage: Float, percentageText: String) {
+fun MacroCircleItem(label: String, value: String, progress: Float, color: Color) {
     Card(
-        modifier = Modifier
-            .width(100.dp)
-            .border(1.dp, Color.Black, RoundedCornerShape(12.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color.White),
-        shape = RoundedCornerShape(12.dp)
+        modifier = Modifier.size(100.dp),
+        shape = RoundedCornerShape(12.dp),
+        colors = CardDefaults.cardColors(containerColor = GrisCard),
+        border = BorderStroke(1.dp, GrisBorde)
     ) {
         Column(
-            modifier = Modifier.padding(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize().padding(8.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
         ) {
-            Text(label, fontSize = 11.sp, textAlign = TextAlign.Center)
-            Text(value, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+            Box(modifier = Modifier.size(40.dp), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator(
+                    progress = { progress },
+                    modifier = Modifier.fillMaxSize(),
+                    color = color,
+                    strokeWidth = 4.dp,
+                    trackColor = GrisBorde
+                )
+                Icon(Icons.Default.Bolt, contentDescription = null, tint = color, modifier = Modifier.size(12.dp))
+            }
             Spacer(modifier = Modifier.height(8.dp))
-            LinearProgressIndicator(
-                progress = { percentage },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(6.dp)
-                    .clip(RoundedCornerShape(3.dp)),
-                color = VerdeApp,
-                trackColor = Color(0xFFF0F0F0),
-            )
-            Text(percentageText, fontSize = 10.sp, color = Color.Gray)
+            Text(label, color = TextoGris, fontSize = 8.sp, fontWeight = FontWeight.Bold, textAlign = TextAlign.Center)
+            Text(value, color = Color.White, fontSize = 14.sp, fontWeight = FontWeight.Bold)
         }
+    }
+}
+
+@Composable
+fun DetailItem(label: String, value: String, modifier: Modifier = Modifier) {
+    Column(modifier = modifier) {
+        Text(label, color = TextoGris, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+        Text(value, color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.height(4.dp))
+        Box(modifier = Modifier.fillMaxWidth(0.8f).height(1.dp).background(GrisBorde))
     }
 }
 
