@@ -24,10 +24,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import com.example.myapplication.viewmodel.ProfileState
+import com.example.myapplication.viewmodel.ProfileViewModel
 
 @Composable
-fun HomeScreen(onScan: () -> Unit, onNavigate: (String) -> Unit) {
+fun HomeScreen(
+    onScan: () -> Unit,
+    onNavigate: (String) -> Unit,
+    viewModel: ProfileViewModel = viewModel()
+) {
+    val state = viewModel.profileState
+
     Scaffold(
         containerColor = FondoOscuro,
         bottomBar = { BarraNavegacionComun("home", onNavigate) }
@@ -60,24 +69,48 @@ fun HomeScreen(onScan: () -> Unit, onNavigate: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            Text("Hola, Juan", color = VerdeApp, fontSize = 32.sp, fontWeight = FontWeight.Bold)
-            Text("Tu rendimiento de hoy está en camino.", color = TextoGris, fontSize = 14.sp)
+            when (state) {
+                is ProfileState.Loading -> {
+                    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = VerdeApp)
+                    }
+                }
+                is ProfileState.Success -> {
+                    val user = state.user
+                    val calorieGoal = when(user.objective) {
+                        "Bajar peso" -> 1800
+                        "Subir masa" -> 2800
+                        "Mantenimiento" -> 2200
+                        else -> 2000
+                    }
+                    
+                    Text("Hola, ${user.name.split(" ")[0]}", color = VerdeApp, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                    Text("Tu rendimiento de hoy está en camino.", color = TextoGris, fontSize = 14.sp)
 
-            Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-            // Calorie Card
-            CalorieDonutCard()
+                    // Calorie Card
+                    CalorieDonutCard(consumed = 1200, goal = calorieGoal)
 
-            Spacer(modifier = Modifier.height(24.dp))
+                    Spacer(modifier = Modifier.height(24.dp))
 
-            // Macro Bars
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                MacroVerticalBar("PROTEÍNAS", "85g / 130g", 0.65f, Modifier.weight(1f))
-                MacroVerticalBar("CARBOS", "110g / 250g", 0.44f, Modifier.weight(1f))
-                MacroVerticalBar("GRASAS", "45g / 70g", 0.64f, Modifier.weight(1f))
+                    // Macro Bars (Simulados por ahora, pero integrados en el flujo)
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        MacroVerticalBar("PROTEÍNAS", "85g / 130g", 0.65f, Modifier.weight(1f))
+                        MacroVerticalBar("CARBOS", "110g / 250g", 0.44f, Modifier.weight(1f))
+                        MacroVerticalBar("GRASAS", "45g / 70g", 0.64f, Modifier.weight(1f))
+                    }
+                }
+                is ProfileState.Error -> {
+                    Text("Hola!", color = VerdeApp, fontSize = 32.sp, fontWeight = FontWeight.Bold)
+                    Text("Error al cargar datos.", color = Color.Red, fontSize = 14.sp)
+                    
+                    Spacer(modifier = Modifier.height(24.dp))
+                    CalorieDonutCard(consumed = 0, goal = 2000)
+                }
             }
 
             Spacer(modifier = Modifier.height(32.dp))
@@ -111,7 +144,8 @@ fun HomeScreen(onScan: () -> Unit, onNavigate: (String) -> Unit) {
 }
 
 @Composable
-fun CalorieDonutCard() {
+fun CalorieDonutCard(consumed: Int, goal: Int) {
+    val progress = if (goal > 0) consumed.toFloat() / goal else 0f
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -122,15 +156,15 @@ fun CalorieDonutCard() {
     ) {
         Box(contentAlignment = Alignment.Center, modifier = Modifier.fillMaxSize()) {
             CircularProgressIndicator(
-                progress = { 0.6f },
+                progress = { progress },
                 modifier = Modifier.size(200.dp),
                 color = VerdeApp,
                 strokeWidth = 12.dp,
                 trackColor = GrisBorde,
             )
             Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text("1200", color = Color.White, fontSize = 48.sp, fontWeight = FontWeight.Black)
-                Text("DE 2000 KCAL", color = TextoGris, fontSize = 14.sp, fontWeight = FontWeight.Bold)
+                Text("$consumed", color = Color.White, fontSize = 48.sp, fontWeight = FontWeight.Black)
+                Text("DE $goal KCAL", color = TextoGris, fontSize = 14.sp, fontWeight = FontWeight.Bold)
             }
         }
     }
