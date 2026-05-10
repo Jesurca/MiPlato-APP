@@ -118,6 +118,11 @@ fun AppNavigation() {
             "history" -> HistoryScreen(
                 onNavigate = { currentScreen = it }
             )
+
+            "add_food" -> AddFoodScreen(
+                onBack = { currentScreen = "history" },
+                onFoodAdded = { currentScreen = "history" }
+            )
         }
 
         // Pantalla de carga (Loading)

@@ -9,12 +9,14 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.NotificationsNone
 import androidx.compose.material.icons.filled.PhotoCamera
 import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material.icons.outlined.AccessTime
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -36,6 +38,19 @@ fun HomeScreen(
     viewModel: ProfileViewModel = viewModel()
 ) {
     val state = viewModel.profileState
+
+    val mealViewModel: com.example.myapplication.viewmodel.MealViewModel = androidx.lifecycle.viewmodel.compose.viewModel()
+    val mealState = mealViewModel.mealState
+    
+    LaunchedEffect(Unit) {
+        mealViewModel.fetchMeals()
+    }
+
+    val totalConsumed = if (mealState is com.example.myapplication.viewmodel.MealState.Success) {
+        mealState.meals.sumOf { it.calories }
+    } else {
+        0
+    }
 
     Scaffold(
         containerColor = FondoOscuro,
@@ -90,7 +105,7 @@ fun HomeScreen(
                     Spacer(modifier = Modifier.height(24.dp))
 
                     // Calorie Card
-                    CalorieDonutCard(consumed = 1200, goal = calorieGoal)
+                    CalorieDonutCard(consumed = totalConsumed, goal = calorieGoal)
 
                     Spacer(modifier = Modifier.height(24.dp))
 
@@ -136,6 +151,14 @@ fun HomeScreen(
                 text = "ESCANEAR COMIDA", 
                 onClick = onScan,
                 icon = Icons.Default.PhotoCamera
+            )
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            BotonPrincipal(
+                text = "AGREGAR MANUALMENTE",
+                onClick = { onNavigate("add_food") },
+                icon = Icons.Default.Add
             )
             
             Spacer(modifier = Modifier.height(16.dp))

@@ -24,14 +24,31 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.myapplication.viewmodel.MealViewModel
+
 @Composable
-fun AddFoodScreen(onBack: () -> Unit, onFoodAdded: () -> Unit) {
+fun AddFoodScreen(
+    onBack: () -> Unit,
+    onFoodAdded: () -> Unit,
+    mealViewModel: MealViewModel = viewModel()
+) {
     var searchText by remember { mutableStateOf("") }
     var quantity by remember { mutableStateOf("100") }
     var selectedUnit by remember { mutableStateOf("Gramos (g)") }
     var expanded by remember { mutableStateOf(false) }
 
     val units = listOf("Gramos (g)", "Porción", "Taza")
+
+    // Mock results for now, but we could eventually fetch these
+    val results = listOf(
+        Triple("Pollo a la plancha", 165, Icons.Default.Restaurant),
+        Triple("Arroz integral", 111, Icons.Default.Grain),
+        Triple("Ensalada mixta", 45, Icons.Default.Eco),
+        Triple("Manzana", 52, Icons.Default.Favorite)
+    )
+
+    var selectedItem by remember { mutableStateOf(results[0]) }
     
     Scaffold(
         containerColor = FondoOscuro,
@@ -96,13 +113,18 @@ fun AddFoodScreen(onBack: () -> Unit, onFoodAdded: () -> Unit) {
                 border = BorderStroke(1.dp, GrisBorde)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    SearchResultItem("Pollo a la plancha", "165 kcal • 100g", Icons.Default.Restaurant)
-                    HorizontalDivider(color = GrisBorde, modifier = Modifier.padding(vertical = 8.dp))
-                    SearchResultItem("Arroz integral", "111 kcal • 100g", Icons.Default.Grain)
-                    HorizontalDivider(color = GrisBorde, modifier = Modifier.padding(vertical = 8.dp))
-                    SearchResultItem("Ensalada mixta", "45 kcal • 150g", Icons.Default.Eco)
-                    HorizontalDivider(color = GrisBorde, modifier = Modifier.padding(vertical = 8.dp))
-                    SearchResultItem("Manzana", "52 kcal • 1 ud", Icons.Default.Favorite)
+                    results.forEachIndexed { index, item ->
+                        SearchResultItem(
+                            name = item.first,
+                            detail = "${item.second} kcal • 100g",
+                            icon = item.third,
+                            isSelected = selectedItem == item,
+                            onSelect = { selectedItem = item }
+                        )
+                        if (index < results.size - 1) {
+                            HorizontalDivider(color = GrisBorde, modifier = Modifier.padding(vertical = 8.dp))
+                        }
+                    }
                 }
             }
 
@@ -128,7 +150,14 @@ fun AddFoodScreen(onBack: () -> Unit, onFoodAdded: () -> Unit) {
                         onValueChange = { quantity = it },
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(12.dp),
-                        leadingIcon = { Icon(Icons.Default.Remove, null, tint = VerdeApp, modifier = Modifier.clickable { /* Decrease */ }) },
+                        leadingIcon = { Icon(Icons.Default.Remove, null, tint = VerdeApp, modifier = Modifier.clickable { 
+                            val current = quantity.toIntOrNull() ?: 0
+                            if (current > 0) quantity = (current - 10).toString()
+                        }) },
+                        trailingIcon = { Icon(Icons.Default.Add, null, tint = VerdeApp, modifier = Modifier.clickable { 
+                            val current = quantity.toIntOrNull() ?: 0
+                            quantity = (current + 10).toString()
+                        }) },
                         colors = OutlinedTextFieldDefaults.colors(
                             focusedBorderColor = VerdeApp,
                             unfocusedBorderColor = GrisBorde,
@@ -172,7 +201,15 @@ fun AddFoodScreen(onBack: () -> Unit, onFoodAdded: () -> Unit) {
                     
                     Spacer(modifier = Modifier.height(32.dp))
                     
-                    BotonPrincipal("Agregar alimento", onClick = onFoodAdded, icon = Icons.Default.CheckCircle)
+                    BotonPrincipal("Agregar alimento", onClick = {
+                        mealViewModel.addMeal(
+                            name = selectedItem.first,
+                            calories = selectedItem.second,
+                            quantity = quantity.toIntOrNull() ?: 0,
+                            unit = selectedUnit
+                        )
+                        onFoodAdded()
+                    }, icon = Icons.Default.CheckCircle)
                     
                     Spacer(modifier = Modifier.height(16.dp))
                     
@@ -186,9 +223,12 @@ fun AddFoodScreen(onBack: () -> Unit, onFoodAdded: () -> Unit) {
 }
 
 @Composable
-fun SearchResultItem(name: String, detail: String, icon: ImageVector) {
+fun SearchResultItem(name: String, detail: String, icon: ImageVector, isSelected: Boolean, onSelect: () -> Unit) {
     Row(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onSelect() }
+            .padding(vertical = 4.dp),
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
@@ -197,10 +237,10 @@ fun SearchResultItem(name: String, detail: String, icon: ImageVector) {
                 modifier = Modifier
                     .size(40.dp)
                     .clip(RoundedCornerShape(8.dp))
-                    .background(GrisBorde),
+                    .background(if (isSelected) VerdeApp.copy(alpha = 0.2f) else GrisBorde),
                 contentAlignment = Alignment.Center
             ) {
-                Icon(icon, contentDescription = null, tint = VerdeApp, modifier = Modifier.size(20.dp))
+                Icon(icon, contentDescription = null, tint = if (isSelected) VerdeApp else Color.White, modifier = Modifier.size(20.dp))
             }
             Spacer(modifier = Modifier.width(16.dp))
             Column {
@@ -208,9 +248,18 @@ fun SearchResultItem(name: String, detail: String, icon: ImageVector) {
                 Text(detail, color = TextoGris, fontSize = 12.sp)
             }
         }
-        Icon(Icons.Default.Add, contentDescription = null, tint = VerdeApp, modifier = Modifier.size(24.dp).border(1.dp, VerdeApp, CircleShape))
+        Icon(
+            imageVector = if (isSelected) Icons.Default.CheckCircle else Icons.Default.Add,
+            contentDescription = null,
+            tint = VerdeApp,
+            modifier = Modifier
+                .size(24.dp)
+                .border(1.dp, VerdeApp, CircleShape)
+                .padding(2.dp)
+        )
     }
 }
+
 
 @Composable
 fun BotonSecundario(text: String, onClick: () -> Unit) {

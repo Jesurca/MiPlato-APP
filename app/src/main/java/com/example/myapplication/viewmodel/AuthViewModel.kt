@@ -26,7 +26,10 @@ class AuthViewModel(private val repository: AuthRepository = AuthRepository()) :
             authState = AuthState.Loading
             val result = repository.registerUser(name, email, pass, objective)
             authState = result.fold(
-                onSuccess = { AuthState.SuccessRegistration },
+                onSuccess = { 
+                    repository.logout() // Cerramos sesión para forzar el login manual
+                    AuthState.SuccessRegistration 
+                },
                 onFailure = { AuthState.Error(it.message ?: "Error desconocido") }
             )
         }

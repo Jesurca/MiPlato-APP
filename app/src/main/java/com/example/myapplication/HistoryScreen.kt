@@ -26,13 +26,22 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.myapplication.viewmodel.MealViewModel
+import com.example.myapplication.viewmodel.MealState
+import java.text.SimpleDateFormat
+import java.util.*
+
 @Composable
-fun HistoryScreen(onNavigate: (String) -> Unit) {
-    val historyData = listOf(
-        DayRecord("Lunes 23 oct", 1850, 110, 250, 70),
-        DayRecord("Martes 22 oct (Hoy)", 2100, 120, 280, 80, isActual = true),
-        DayRecord("Miércoles 21 oct", 1950, 105, 240, 75)
-    )
+fun HistoryScreen(
+    onNavigate: (String) -> Unit,
+    mealViewModel: MealViewModel = viewModel()
+) {
+    val mealState = mealViewModel.mealState
+
+    LaunchedEffect(Unit) {
+        mealViewModel.fetchMeals()
+    }
 
     Scaffold(
         containerColor = FondoOscuro,
@@ -74,64 +83,53 @@ fun HistoryScreen(onNavigate: (String) -> Unit) {
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                items(historyData) { record ->
-                    HistoryCard(record)
-                }
-                
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    DetailExpandedCard()
-                }
-                
-                item {
-                    Spacer(modifier = Modifier.height(24.dp))
-                    Text("ARTÍCULOS CONSUMIDOS", color = TextoGris, fontSize = 11.sp, fontWeight = FontWeight.Bold)
-                    Spacer(modifier = Modifier.height(12.dp))
-                    ConsumedItemRow("Ensalada de Pollo", "Almuerzo • 450 kcal")
-                    Spacer(modifier = Modifier.height(12.dp))
-                    ConsumedItemRow("Pasta Integral", "Cena • 620 kcal")
-                }
-            }
-        }
-    }
-}
-
-@Composable
-fun HistoryCard(record: DayRecord) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = GrisCard),
-        border = BorderStroke(1.dp, GrisBorde)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text(record.date, color = TextoGris, fontSize = 12.sp)
-                Text("${record.kcal} KCAL", color = if (record.isActual) VerdeApp else Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
-            }
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                if (record.isActual) {
-                    Surface(
-                        color = VerdeApp.copy(alpha = 0.2f),
-                        shape = RoundedCornerShape(8.dp),
-                        modifier = Modifier.padding(end = 8.dp)
-                    ) {
-                        Text("Actual", color = VerdeApp, modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp), fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            when (mealState) {
+                is MealState.Loading -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator(color = VerdeApp)
                     }
                 }
-                Icon(Icons.Default.ChevronRight, contentDescription = null, tint = TextoGris)
+                is MealState.Error -> {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        Text(mealState.message, color = Color.Red)
+                    }
+                }
+                is MealState.Success -> {
+                    val meals = mealState.meals
+                    val totalKcal = meals.sumOf { it.calories }
+                    
+                    LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        item {
+                            DetailExpandedCard(totalKcal)
+                        }
+                        
+                        item {
+                            Spacer(modifier = Modifier.height(24.dp))
+                            Text("ARTÍCULOS CONSUMIDOS", color = TextoGris, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            Spacer(modifier = Modifier.height(12.dp))
+                        }
+
+                        if (meals.isEmpty()) {
+                            item {
+                                Text("No hay alimentos registrados hoy", color = TextoGris, modifier = Modifier.padding(16.dp))
+                            }
+                        } else {
+                            items(meals) { meal ->
+                                val sdf = SimpleDateFormat("HH:mm", Locale.getDefault())
+                                val time = sdf.format(Date(meal.timestamp))
+                                ConsumedItemRow(meal.name, "$time • ${meal.calories} kcal • ${meal.quantity}${meal.unit.take(1)}")
+                            }
+                        }
+                    }
+                }
+                else -> {}
             }
         }
     }
 }
 
 @Composable
-fun DetailExpandedCard() {
+fun DetailExpandedCard(totalKcal: Int) {
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = RoundedCornerShape(24.dp),
@@ -140,10 +138,10 @@ fun DetailExpandedCard() {
     ) {
         Column(modifier = Modifier.padding(20.dp)) {
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("Detalle: Lunes 23 oct", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
+                Text("Detalle de Hoy", color = Color.White, fontSize = 22.sp, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
                 Column(horizontalAlignment = Alignment.End) {
                     Text("TOTAL", color = TextoGris, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-                    Text("1,850", color = VerdeApp, fontSize = 24.sp, fontWeight = FontWeight.Black)
+                    Text("$totalKcal", color = VerdeApp, fontSize = 24.sp, fontWeight = FontWeight.Black)
                     Text("kcal", color = VerdeApp, fontSize = 14.sp, fontWeight = FontWeight.Bold)
                 }
             }
@@ -151,28 +149,31 @@ fun DetailExpandedCard() {
             Spacer(modifier = Modifier.height(24.dp))
             
             Row(verticalAlignment = Alignment.CenterVertically) {
+                val progress = (totalKcal.toFloat() / 2000f).coerceIn(0f, 1f)
                 Box(modifier = Modifier.size(120.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator(
-                        progress = { 0.7f },
+                        progress = { progress },
                         modifier = Modifier.fillMaxSize(),
                         color = VerdeApp,
                         strokeWidth = 10.dp,
                         trackColor = GrisBorde
                     )
-                    Text("Macros", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Text("Meta", color = Color.White, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                 }
                 
                 Spacer(modifier = Modifier.width(24.dp))
                 
                 Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                    MacroDetailItem("Proteínas", "110g", VerdeApp)
-                    MacroDetailItem("Carbohidratos", "250g", Color(0xFFFFD150))
-                    MacroDetailItem("Grasas", "70g", Color.Gray)
+                    // Placeholder macros based on kcal
+                    MacroDetailItem("Proteínas", "${(totalKcal * 0.25 / 4).toInt()}g", VerdeApp)
+                    MacroDetailItem("Carbohidratos", "${(totalKcal * 0.5 / 4).toInt()}g", Color(0xFFFFD150))
+                    MacroDetailItem("Grasas", "${(totalKcal * 0.25 / 9).toInt()}g", Color.Gray)
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun MacroDetailItem(label: String, value: String, color: Color) {
