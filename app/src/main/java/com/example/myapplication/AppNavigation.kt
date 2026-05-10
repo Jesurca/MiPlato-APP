@@ -44,7 +44,6 @@ fun AppNavigation() {
     LaunchedEffect(authViewModel.authState) {
         when (val state = authViewModel.authState) {
             is AuthState.SuccessRegistration -> {
-                Toast.makeText(context, "¡Cuenta creada! Por favor, inicia sesión.", Toast.LENGTH_LONG).show()
                 currentScreen = "login" // REDIRECCIÓN AL LOGIN TRAS REGISTRO
                 authViewModel.resetState()
             }
@@ -53,8 +52,8 @@ fun AppNavigation() {
                 authViewModel.resetState()
             }
             is AuthState.Error -> {
-                Toast.makeText(context, "Error: ${state.message}", Toast.LENGTH_LONG).show()
-                authViewModel.resetState()
+                // Ya no mostramos Toast. El error se muestra en rojo dentro de las pantallas.
+                // No reseteamos el estado aquí para que la pantalla pueda leer el mensaje de error.
             }
             else -> {}
         }

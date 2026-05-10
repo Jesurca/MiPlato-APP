@@ -6,6 +6,9 @@ import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.repository.AuthRepository
+import com.google.firebase.auth.FirebaseAuthInvalidCredentialsException
+import com.google.firebase.auth.FirebaseAuthInvalidUserException
+import com.google.firebase.auth.FirebaseAuthUserCollisionException
 import kotlinx.coroutines.launch
 
 sealed class AuthState {
@@ -30,24 +33,45 @@ class AuthViewModel(private val repository: AuthRepository = AuthRepository()) :
                     repository.logout() // Cerramos sesión para forzar el login manual
                     AuthState.SuccessRegistration 
                 },
-                onFailure = { AuthState.Error(it.message ?: "Error desconocido") }
+                onFailure = { 
+                    AuthState.Error(mapFirebaseError(it)) 
+                }
             )
         }
     }
 
     fun login(email: String, pass: String) {
+        if (email.isBlank() || pass.isBlank()) {
+            authState = AuthState.Error("Por favor, rellena todos los campos.")
+            return
+        }
         viewModelScope.launch {
             authState = AuthState.Loading
             val result = repository.loginUser(email, pass)
             authState = result.fold(
                 onSuccess = { AuthState.SuccessLogin },
-                onFailure = { AuthState.Error(it.message ?: "Error de login") }
+                onFailure = { 
+                    AuthState.Error(mapFirebaseError(it)) 
+                }
             )
+        }
+    }
+    
+    private fun mapFirebaseError(exception: Throwable): String {
+        return when (exception) {
+            is FirebaseAuthUserCollisionException -> "Este correo ya está registrado."
+            is FirebaseAuthInvalidUserException -> "No existe una cuenta con este correo."
+            is FirebaseAuthInvalidCredentialsException -> "Correo o contraseña incorrectos."
+            else -> exception.localizedMessage ?: "Ocurrió un error inesperado."
         }
     }
     
     fun resetState() {
         authState = AuthState.Idle
+    }
+
+    fun setError(message: String) {
+        authState = AuthState.Error(message)
     }
 
     fun logout() {

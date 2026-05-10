@@ -29,14 +29,23 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.util.Validations
 
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.myapplication.viewmodel.AuthState
+import com.example.myapplication.viewmodel.AuthViewModel
+
 @Composable
-fun RegisterScreen(onRegistered: (String, String, String, String) -> Unit, onBack: () -> Unit) {
+fun RegisterScreen(
+    onRegistered: (String, String, String, String) -> Unit, 
+    onBack: () -> Unit,
+    authViewModel: AuthViewModel = viewModel()
+) {
     var name by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var pass by remember { mutableStateOf("") }
     var confirmPass by remember { mutableStateOf("") }
     var selectedObj by remember { mutableStateOf("Bajar peso") }
 
+    val authState = authViewModel.authState
     val objectives = listOf("Bajar peso", "Mantenimiento", "Subir masa")
     val context = LocalContext.current
 
@@ -103,6 +112,19 @@ fun RegisterScreen(onRegistered: (String, String, String, String) -> Unit, onBac
                 }
             }
 
+            // REGISTER ERROR MESSAGE
+            if (authState is AuthState.Error) {
+                Spacer(modifier = Modifier.height(16.dp))
+                Text(
+                    text = authState.message,
+                    color = Color.Red,
+                    fontSize = 14.sp,
+                    fontWeight = FontWeight.Medium,
+                    modifier = Modifier.fillMaxWidth(),
+                    textAlign = androidx.compose.ui.text.style.TextAlign.Center
+                )
+            }
+
             Spacer(modifier = Modifier.height(24.dp))
 
             // Card Objetivos
@@ -149,7 +171,7 @@ fun RegisterScreen(onRegistered: (String, String, String, String) -> Unit, onBac
                     if (validation.isValid) {
                         onRegistered(name, email, pass, selectedObj)
                     } else {
-                        Toast.makeText(context, validation.message ?: "Error de validación", Toast.LENGTH_SHORT).show()
+                        authViewModel.setError(validation.message ?: "Error de validación")
                     }
                 }
             )
