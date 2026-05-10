@@ -27,6 +27,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.myapplication.util.Validations
 
 @Composable
 fun RegisterScreen(onRegistered: (String, String, String, String) -> Unit, onBack: () -> Unit) {
@@ -137,14 +138,18 @@ fun RegisterScreen(onRegistered: (String, String, String, String) -> Unit, onBac
             BotonPrincipal(
                 text = "Registrarse",
                 onClick = { 
-                    if (name.isEmpty() || email.isEmpty() || pass.isEmpty()) {
-                        Toast.makeText(context, "Rellena todos los campos", Toast.LENGTH_SHORT).show()
-                    } else if (pass != confirmPass) {
-                        Toast.makeText(context, "Las contraseñas no coinciden", Toast.LENGTH_SHORT).show()
-                    } else if (pass.length < 8) {
-                        Toast.makeText(context, "Mínimo 8 caracteres", Toast.LENGTH_SHORT).show()
-                    } else {
+                    val validation = Validations.validateRegister(
+                        name = name,
+                        email = email,
+                        password = pass,
+                        confirmPassword = confirmPass,
+                        acceptedTerms = true // Asumimos true por defecto o puedes añadir un Checkbox
+                    )
+
+                    if (validation.isValid) {
                         onRegistered(name, email, pass, selectedObj)
+                    } else {
+                        Toast.makeText(context, validation.message ?: "Error de validación", Toast.LENGTH_SHORT).show()
                     }
                 }
             )
