@@ -102,6 +102,10 @@ fun AppNavigation() {
             "perfil" -> PerfilScreen(
                 onBack = { currentScreen = "home" },
                 onSave = { currentScreen = "home" },
+                onLogout = {
+                    authViewModel.logout()
+                    currentScreen = "login"
+                },
                 onNavigate = { currentScreen = it }
             )
             

@@ -141,7 +141,7 @@ fun BarraNavegacionComun(currentScreen: String, onNavigate: (String) -> Unit) {
             Triple("home", Icons.Default.Home, "Inicio"),
             Triple("planes", Icons.Default.RestaurantMenu, "Planes"),
             Triple("history", Icons.Default.History, "Historial"),
-            Triple("perfil", Icons.Default.Person, "Perfil")
+            Triple("perfil", Icons.Default.Person, "Configuración")
         )
 
         items.forEach { (route, icon, label) ->
