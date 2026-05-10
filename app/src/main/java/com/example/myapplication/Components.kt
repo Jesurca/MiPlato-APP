@@ -12,6 +12,7 @@ import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.RestaurantMenu
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -141,7 +142,7 @@ fun BarraNavegacionComun(currentScreen: String, onNavigate: (String) -> Unit) {
             Triple("home", Icons.Default.Home, "Inicio"),
             Triple("planes", Icons.Default.RestaurantMenu, "Planes"),
             Triple("history", Icons.Default.History, "Historial"),
-            Triple("perfil", Icons.Default.Person, "Configuración")
+            Triple("perfil", Icons.Default.Settings, "Configuración")
         )
 
         items.forEach { (route, icon, label) ->

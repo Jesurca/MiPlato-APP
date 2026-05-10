@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -6,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.example.myapplication"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.example.myapplication"
@@ -15,6 +17,15 @@ android {
         versionCode = 1
         versionName = "1.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // Leer API Key desde local.properties
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localProperties.load(localPropertiesFile.inputStream())
+        }
+        val geminiKey = localProperties.getProperty("GEMINI_API_KEY") ?: ""
+        buildConfigField("String", "GEMINI_API_KEY", "\"$geminiKey\"")
     }
 
     buildTypes {
@@ -27,7 +38,16 @@ android {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
-    buildFeatures { compose = true }
+    buildFeatures { 
+        compose = true 
+        buildConfig = true
+    }
+
+    packaging {
+        jniLibs {
+            useLegacyPackaging = false
+        }
+    }
 }
 
 dependencies {
@@ -59,6 +79,9 @@ dependencies {
     implementation(libs.androidx.credentials)
     implementation(libs.androidx.credentials.play.services.auth)
     implementation(libs.googleid)
+
+    // AI (Gemini) - USAMOS VERSION ESTABLE DISPONIBLE SEGÚN MAVEN
+    implementation(libs.google.generativeai)
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)

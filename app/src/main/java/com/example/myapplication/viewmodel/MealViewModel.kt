@@ -35,6 +35,27 @@ class MealViewModel(private val repository: MealRepository = MealRepository()) :
         }
     }
 
+    fun addRecommendedMeal(meal: com.example.myapplication.model.RecommendedMeal) {
+        viewModelScope.launch {
+            // Extraer solo el número de las calorías (ej: "400 kcal" -> 400)
+            val calValue = meal.calories.replace(Regex("[^0-9]"), "").toIntOrNull() ?: 0
+            
+            repository.addMeal(
+                name = meal.name,
+                calories = calValue,
+                quantity = 1,
+                unit = "Servicio"
+            ).fold(
+                onSuccess = {
+                    // Podríamos disparar un estado de "Agregado con éxito"
+                },
+                onFailure = {
+                    mealState = MealState.Error("Error al guardar recomendación: ${it.message}")
+                }
+            )
+        }
+    }
+
     fun fetchMeals() {
         viewModelScope.launch {
             mealState = MealState.Loading
