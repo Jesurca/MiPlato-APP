@@ -53,6 +53,24 @@ fun HomeScreen(
         0
     }
 
+    val totalProteins = if (mealState is com.example.myapplication.viewmodel.MealState.Success) {
+        mealState.meals.sumOf { it.proteins }
+    } else {
+        0.0
+    }
+
+    val totalCarbs = if (mealState is com.example.myapplication.viewmodel.MealState.Success) {
+        mealState.meals.sumOf { it.carbs }
+    } else {
+        0.0
+    }
+
+    val totalFats = if (mealState is com.example.myapplication.viewmodel.MealState.Success) {
+        mealState.meals.sumOf { it.fats }
+    } else {
+        0.0
+    }
+
     Scaffold(
         containerColor = FondoOscuro,
         bottomBar = { BarraNavegacionComun("home", onNavigate) }
@@ -110,14 +128,48 @@ fun HomeScreen(
 
                     Spacer(modifier = Modifier.height(24.dp))
 
-                    // Macro Bars (Simulados por ahora, pero integrados en el flujo)
+                    // Macro Bars (Basados en datos reales del usuario)
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
-                        MacroVerticalBar("PROTEÍNAS", "85g / 130g", 0.65f, Modifier.weight(1f))
-                        MacroVerticalBar("CARBOS", "110g / 250g", 0.44f, Modifier.weight(1f))
-                        MacroVerticalBar("GRASAS", "45g / 70g", 0.64f, Modifier.weight(1f))
+                        val proteinGoal = when(user.objective) {
+                            "Bajar peso" -> 150.0
+                            "Subir masa" -> 180.0
+                            "Mantenimiento" -> 130.0
+                            else -> 140.0
+                        }
+                        val carbsGoal = when(user.objective) {
+                            "Bajar peso" -> 150.0
+                            "Subir masa" -> 350.0
+                            "Mantenimiento" -> 250.0
+                            else -> 200.0
+                        }
+                        val fatsGoal = when(user.objective) {
+                            "Bajar peso" -> 50.0
+                            "Subir masa" -> 80.0
+                            "Mantenimiento" -> 70.0
+                            else -> 60.0
+                        }
+
+                        MacroVerticalBar(
+                            "PROTEÍNAS", 
+                            "${totalProteins.toInt()}g / ${proteinGoal.toInt()}g", 
+                            (totalProteins / proteinGoal).toFloat().coerceIn(0f, 1f), 
+                            Modifier.weight(1f)
+                        )
+                        MacroVerticalBar(
+                            "CARBOS", 
+                            "${totalCarbs.toInt()}g / ${carbsGoal.toInt()}g", 
+                            (totalCarbs / carbsGoal).toFloat().coerceIn(0f, 1f), 
+                            Modifier.weight(1f)
+                        )
+                        MacroVerticalBar(
+                            "GRASAS", 
+                            "${totalFats.toInt()}g / ${fatsGoal.toInt()}g", 
+                            (totalFats / fatsGoal).toFloat().coerceIn(0f, 1f), 
+                            Modifier.weight(1f)
+                        )
                     }
                 }
                 is ProfileState.Error -> {

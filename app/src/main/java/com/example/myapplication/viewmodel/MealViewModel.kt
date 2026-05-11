@@ -21,10 +21,10 @@ class MealViewModel(private val repository: MealRepository = MealRepository()) :
     var mealState by mutableStateOf<MealState>(MealState.Idle)
         private set
 
-    fun addMeal(name: String, calories: Int, quantity: Int, unit: String) {
+    fun addMeal(name: String, calories: Int, proteins: Double, carbs: Double, fats: Double, quantity: Int, unit: String) {
         viewModelScope.launch {
             mealState = MealState.Loading
-            repository.addMeal(name, calories, quantity, unit).fold(
+            repository.addMeal(name, calories, proteins, carbs, fats, quantity, unit).fold(
                 onSuccess = {
                     fetchMeals()
                 },
@@ -40,14 +40,23 @@ class MealViewModel(private val repository: MealRepository = MealRepository()) :
             // Extraer solo el número de las calorías (ej: "400 kcal" -> 400)
             val calValue = meal.calories.replace(Regex("[^0-9]"), "").toIntOrNull() ?: 0
             
+            // Intentar extraer macros del string "P: 30g C: 40g"
+            val proteins = Regex("P:\\s*(\\d+)").find(meal.macros)?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
+            val carbs = Regex("C:\\s*(\\d+)").find(meal.macros)?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
+            // La IA a veces no devuelve grasas en el prompt actual, pero podemos intentar buscar "G:" o "F:"
+            val fats = Regex("[GF]:\\s*(\\d+)").find(meal.macros)?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
+
             repository.addMeal(
                 name = meal.name,
                 calories = calValue,
+                proteins = proteins,
+                carbs = carbs,
+                fats = fats,
                 quantity = 1,
                 unit = "Servicio"
             ).fold(
                 onSuccess = {
-                    // Podríamos disparar un estado de "Agregado con éxito"
+                    fetchMeals()
                 },
                 onFailure = {
                     mealState = MealState.Error("Error al guardar recomendación: ${it.message}")

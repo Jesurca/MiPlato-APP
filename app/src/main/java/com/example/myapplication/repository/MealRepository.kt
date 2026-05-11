@@ -12,7 +12,15 @@ class MealRepository(
 ) {
     private val userId get() = auth.currentUser?.uid
 
-    suspend fun addMeal(name: String, calories: Int, quantity: Int, unit: String): Result<Unit> {
+    suspend fun addMeal(
+        name: String,
+        calories: Int,
+        proteins: Double,
+        carbs: Double,
+        fats: Double,
+        quantity: Int,
+        unit: String
+    ): Result<Unit> {
         val uid = userId ?: return Result.failure(Exception("Usuario no autenticado"))
         return try {
             val mealRef = db.collection("users").document(uid).collection("meals").document()
@@ -21,6 +29,9 @@ class MealRepository(
                 userId = uid,
                 name = name,
                 calories = calories,
+                proteins = proteins,
+                carbs = carbs,
+                fats = fats,
                 quantity = quantity,
                 unit = unit
             )

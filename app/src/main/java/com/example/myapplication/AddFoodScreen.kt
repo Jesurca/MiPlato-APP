@@ -41,11 +41,13 @@ fun AddFoodScreen(
     val units = listOf("Gramos (g)", "Porción", "Taza")
 
     // Mock results for now, but we could eventually fetch these
+    data class FoodSearchResult(val name: String, val calories: Int, val proteins: Double, val carbs: Double, val fats: Double, val icon: ImageVector)
+
     val results = listOf(
-        Triple("Pollo a la plancha", 165, Icons.Default.Restaurant),
-        Triple("Arroz integral", 111, Icons.Default.Grain),
-        Triple("Ensalada mixta", 45, Icons.Default.Eco),
-        Triple("Manzana", 52, Icons.Default.Favorite)
+        FoodSearchResult("Pollo a la plancha", 165, 31.0, 0.0, 3.6, Icons.Default.Restaurant),
+        FoodSearchResult("Arroz integral", 111, 2.6, 23.0, 0.9, Icons.Default.Grain),
+        FoodSearchResult("Ensalada mixta", 45, 1.5, 5.0, 0.2, Icons.Default.Eco),
+        FoodSearchResult("Manzana", 52, 0.3, 14.0, 0.2, Icons.Default.Favorite)
     )
 
     var selectedItem by remember { mutableStateOf(results[0]) }
@@ -115,9 +117,9 @@ fun AddFoodScreen(
                 Column(modifier = Modifier.padding(16.dp)) {
                     results.forEachIndexed { index, item ->
                         SearchResultItem(
-                            name = item.first,
-                            detail = "${item.second} kcal • 100g",
-                            icon = item.third,
+                            name = item.name,
+                            detail = "${item.calories} kcal • 100g",
+                            icon = item.icon,
                             isSelected = selectedItem == item,
                             onSelect = { selectedItem = item }
                         )
@@ -203,8 +205,11 @@ fun AddFoodScreen(
                     
                     BotonPrincipal("Agregar alimento", onClick = {
                         mealViewModel.addMeal(
-                            name = selectedItem.first,
-                            calories = selectedItem.second,
+                            name = selectedItem.name,
+                            calories = selectedItem.calories,
+                            proteins = selectedItem.proteins,
+                            carbs = selectedItem.carbs,
+                            fats = selectedItem.fats,
                             quantity = quantity.toIntOrNull() ?: 0,
                             unit = selectedUnit
                         )
