@@ -7,7 +7,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myapplication.model.RecommendedMeal
 import com.google.ai.client.generativeai.GenerativeModel
-import com.google.ai.client.generativeai.type.content
 import kotlinx.coroutines.launch
 
 sealed class AIState {
@@ -18,8 +17,8 @@ sealed class AIState {
 }
 
 class AIViewModel : ViewModel() {
-    
-    // Al usar gemini-1.5-flash con el SDK 0.9.0, usamos la API Key desde BuildConfig para mayor seguridad.
+
+    // Requiere SDK 0.9.0 para gemini-1.5-flash
     private val generativeModel = GenerativeModel(
         modelName = "gemini-1.5-flash",
         apiKey = com.example.myapplication.BuildConfig.GEMINI_API_KEY
@@ -40,13 +39,13 @@ class AIViewModel : ViewModel() {
                     NOMBRE: [Plato]
                     DESC: [Descripción corta]
                     KCAL: [Número] kcal
-                    MACROS: P: [Número]g C: [Número]g
+                    MACROS: P: [Número]g C: [Número]g G: [Número]g
                 """.trimIndent()
 
                 val response = generativeModel.generateContent(prompt)
                 val responseText = response.text ?: ""
                 val meals = parseAiResponse(responseText)
-                
+
                 if (meals.isNotEmpty()) {
                     aiState = AIState.Success(meals)
                 } else {
@@ -54,36 +53,34 @@ class AIViewModel : ViewModel() {
                 }
             } catch (e: Exception) {
                 e.printStackTrace()
-                val errorMsg = e.localizedMessage ?: e.message ?: ""
-                
-                // Si ves este mensaje en la app, es que Gradle SIGUE usando la versión 0.9.0
-                if (errorMsg.contains("MissingFieldException") || errorMsg.contains("details")) {
-                    aiState = AIState.Error("ERROR DE VERSIÓN: El proyecto sigue usando el SDK 0.9.0 obsoleto. Por favor, haz un 'Rebuild Project' y asegúrate de estar conectado a internet.")
-                } else {
-                    val detailedError = when {
-                        errorMsg.contains("404") -> "Error 404: El modelo no se encuentra. Verifica que tu API Key sea de AI Studio (aistudio.google.com)."
-                        errorMsg.contains("User location") -> "Gemini no está disponible en tu país o región actual."
-                        errorMsg.contains("API_KEY_INVALID") -> "La API Key no es válida."
-                        else -> "Error: $errorMsg"
-                    }
-                    aiState = AIState.Error("Detalle: $detailedError")
+                val errorMsg = e.localizedMessage ?: e.message ?: "Error desconocido"
+
+                val detailedError = when {
+                    errorMsg.contains("404") -> "Modelo no encontrado. Por favor, pulsa el botón de Sync (elefante) para activar el SDK 0.9.0."
+                    errorMsg.contains("403") || errorMsg.contains("blocked") -> "La API Key está bloqueada. Revisa restricciones en Google AI Studio."
+                    errorMsg.contains("API_KEY_INVALID") -> "La API Key no es válida."
+                    else -> errorMsg
                 }
+                aiState = AIState.Error("Detalle: $detailedError")
             }
         }
     }
 
     private fun parseAiResponse(text: String): List<RecommendedMeal> {
         val meals = mutableListOf<RecommendedMeal>()
-        val blocks = text.split("\n\n").filter { it.isNotBlank() }
+        val blocks = text.split(Regex("(?=TIPO:)")).filter { it.isNotBlank() }
         for (block in blocks) {
-            val lines = block.lines().filter { it.isNotBlank() }
+            val lines = block.lines().map { it.trim() }.filter { it.isNotBlank() }
             if (lines.size >= 5) {
-                val type = lines[0].substringAfter("TIPO:").trim()
-                val name = lines[1].substringAfter("NOMBRE:").trim()
-                val desc = lines[2].substringAfter("DESC:").trim()
-                val kcal = lines[3].substringAfter("KCAL:").trim()
-                val macros = lines[4].substringAfter("MACROS:").trim()
-                meals.add(RecommendedMeal(type.uppercase(), name, desc, kcal, macros))
+                val type = lines.find { it.startsWith("TIPO:") }?.substringAfter(":")?.trim() ?: ""
+                val name = lines.find { it.startsWith("NOMBRE:") }?.substringAfter(":")?.trim() ?: ""
+                val desc = lines.find { it.startsWith("DESC:") }?.substringAfter(":")?.trim() ?: ""
+                val kcal = lines.find { it.startsWith("KCAL:") }?.substringAfter(":")?.trim() ?: ""
+                val macros = lines.find { it.startsWith("MACROS:") }?.substringAfter(":")?.trim() ?: ""
+                
+                if (name.isNotEmpty()) {
+                    meals.add(RecommendedMeal(type.uppercase(), name, desc, kcal, macros))
+                }
             }
         }
         return meals

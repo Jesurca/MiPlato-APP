@@ -40,11 +40,10 @@ class MealViewModel(private val repository: MealRepository = MealRepository()) :
             // Extraer solo el número de las calorías (ej: "400 kcal" -> 400)
             val calValue = meal.calories.replace(Regex("[^0-9]"), "").toIntOrNull() ?: 0
             
-            // Intentar extraer macros del string "P: 30g C: 40g"
+            // Intentar extraer macros del string "P: 30g C: 40g G: 10g"
             val proteins = Regex("P:\\s*(\\d+)").find(meal.macros)?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
             val carbs = Regex("C:\\s*(\\d+)").find(meal.macros)?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
-            // La IA a veces no devuelve grasas en el prompt actual, pero podemos intentar buscar "G:" o "F:"
-            val fats = Regex("[GF]:\\s*(\\d+)").find(meal.macros)?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
+            val fats = Regex("G:\\s*(\\d+)").find(meal.macros)?.groupValues?.get(1)?.toDoubleOrNull() ?: 0.0
 
             repository.addMeal(
                 name = meal.name,
@@ -53,7 +52,7 @@ class MealViewModel(private val repository: MealRepository = MealRepository()) :
                 carbs = carbs,
                 fats = fats,
                 quantity = 1,
-                unit = "Servicio"
+                unit = "Plato recomendado"
             ).fold(
                 onSuccess = {
                     fetchMeals()

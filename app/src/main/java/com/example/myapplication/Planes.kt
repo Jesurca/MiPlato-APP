@@ -33,18 +33,30 @@ import com.example.myapplication.viewmodel.AIState
 import com.example.myapplication.viewmodel.AIViewModel
 import com.example.myapplication.viewmodel.MealViewModel
 
+import com.example.myapplication.viewmodel.ProfileViewModel
+import com.example.myapplication.viewmodel.ProfileState
+
 @Composable
 fun PlanesScreen(
     onBack: () -> Unit, 
     onSave: () -> Unit, 
     onNavigate: (String) -> Unit,
     aiViewModel: AIViewModel = viewModel(),
-    mealViewModel: MealViewModel = viewModel()
+    mealViewModel: MealViewModel = viewModel(),
+    profileViewModel: ProfileViewModel = viewModel()
 ) {
-    var selectedTab by remember { mutableStateOf("Bajar peso") }
+    var selectedTab by remember { mutableStateOf("Mantenimiento") }
     val aiState = aiViewModel.aiState
+    val profileState = profileViewModel.profileState
 
-    // Cargar sugerencias al iniciar o cambiar de pestaña
+    // Sincronizar el tab seleccionado con el objetivo del perfil al cargar
+    LaunchedEffect(profileState) {
+        if (profileState is ProfileState.Success) {
+            selectedTab = profileState.user.objective
+        }
+    }
+
+    // Cargar sugerencias al cambiar de pestaña
     LaunchedEffect(selectedTab) {
         aiViewModel.getRecommendations(selectedTab)
     }
@@ -126,10 +138,10 @@ fun PlanesScreen(
                         fontSize = 12.sp, 
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
-                    DefaultMealCards()
+                    DefaultMealCards(mealViewModel)
                 }
                 else -> {
-                    DefaultMealCards()
+                    DefaultMealCards(mealViewModel)
                 }
             }
 
@@ -310,15 +322,22 @@ fun RecommendationCard(text: String) {
 }
 
 @Composable
-fun DefaultMealCards() {
+fun DefaultMealCards(mealViewModel: MealViewModel = viewModel()) {
     Column {
         MealPlanCard(
             type = "DESAYUNO",
             name = "Bowl de Avena",
             description = "Huevo revuelto, avena con frutos rojos, tostada integral.",
             calories = "400 kcal",
-            macros = "P: 20g  C: 45g",
-            icon = Icons.Default.Restaurant
+            macros = "P: 20g  C: 45g  G: 10g",
+            icon = Icons.Default.Restaurant,
+            onAdd = {
+                mealViewModel.addRecommendedMeal(
+                    com.example.myapplication.model.RecommendedMeal(
+                        "DESAYUNO", "Bowl de Avena", "Huevo revuelto, avena...", "400 kcal", "P: 20g C: 45g G: 10g"
+                    )
+                )
+            }
         )
         Spacer(modifier = Modifier.height(16.dp))
         MealPlanCard(
@@ -326,8 +345,15 @@ fun DefaultMealCards() {
             name = "Pollo y Quinoa",
             description = "Pollo a la plancha, quinoa cocida, ensalada de espinacas y brócoli.",
             calories = "650 kcal",
-            macros = "P: 45g  C: 60g",
-            icon = Icons.Default.Restaurant
+            macros = "P: 45g  C: 60g  G: 15g",
+            icon = Icons.Default.Restaurant,
+            onAdd = {
+                mealViewModel.addRecommendedMeal(
+                    com.example.myapplication.model.RecommendedMeal(
+                        "COMIDA", "Pollo y Quinoa", "Pollo a la plancha...", "650 kcal", "P: 45g C: 60g G: 15g"
+                    )
+                )
+            }
         )
         Spacer(modifier = Modifier.height(16.dp))
         MealPlanCard(
@@ -335,8 +361,15 @@ fun DefaultMealCards() {
             name = "Salmón Asado",
             description = "Salmón al horno con espárragos y una pequeña porción de batata.",
             calories = "500 kcal",
-            macros = "P: 35g  C: 15g",
-            icon = Icons.Default.Restaurant
+            macros = "P: 35g  C: 15g  G: 25g",
+            icon = Icons.Default.Restaurant,
+            onAdd = {
+                mealViewModel.addRecommendedMeal(
+                    com.example.myapplication.model.RecommendedMeal(
+                        "CENA", "Salmón Asado", "Salmón al horno...", "500 kcal", "P: 35g C: 15g G: 25g"
+                    )
+                )
+            }
         )
     }
 }
