@@ -43,6 +43,7 @@ fun HomeScreen(
     val mealState = mealViewModel.mealState
     
     LaunchedEffect(Unit) {
+        viewModel.fetchUserProfile() // <--- AÑADIR ESTA LÍNEA
         mealViewModel.fetchMeals()
     }
 

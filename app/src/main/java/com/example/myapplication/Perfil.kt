@@ -28,6 +28,12 @@ fun PerfilScreen(
 ) {
     val state = viewModel.profileState
 
+    // FORZAR REFRESCO AL ENTRAR:
+    // Al entrar en la pantalla, pedimos los datos actualizados del usuario actual.
+    androidx.compose.runtime.LaunchedEffect(Unit) {
+        viewModel.fetchUserProfile()
+    }
+
     Scaffold(
         containerColor = FondoOscuro,
         topBar = {

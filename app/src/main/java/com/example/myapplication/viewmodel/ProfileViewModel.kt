@@ -35,4 +35,8 @@ class ProfileViewModel(private val repository: AuthRepository = AuthRepository()
             }
         }
     }
+
+    fun clearData() {
+        profileState = ProfileState.Loading
+    }
 }
